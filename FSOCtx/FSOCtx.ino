@@ -10,14 +10,15 @@
 #define LEDtx 13
 volatile int CLOCK_COUNTER = 0;
 volatile boolean send_bit = false;
-volatile int baudrate = 10; 
+volatile int baudrate = 300; 
 int bitcount = 0;
 //----------- debugging -----------
 char * buffer = "Uthis is a test";
 //---------------------------------
+long bitclock = 0;
 
 void setup() { 
-  Serial.begin(9600); 
+  Serial.begin(115200); 
   setupTimer();
   pinMode(LEDlaser, OUTPUT);
   pinMode(LEDtx, OUTPUT);
@@ -34,16 +35,36 @@ void loop() {
 //  Serial.println();
 //  delay(2000);
 //---------------------------------
-  if (Serial.available()){
+  while (Serial.available()){
     char c = Serial.read();
     if (c == '!') {
       configure();
     } else {
-      transmit_byte(c);
+//      transmit_byte(c);
+      test();
     }
   }
+//  for (int i = 0; i < 5; i++){ test();}
 }
 
+
+
+void test(){
+  // once you start to send a bit, 
+  bitcount = 0;
+  while (bitcount < 7){
+    if(send_bit){
+      digitalWrite(13, digitalRead(13)^1);
+      bitcount++;
+      Serial.print("send bit");
+      interval(bitclock);
+      send_bit = false;
+    }
+  }
+  if (bitcount ==7) {
+    Serial.println();
+  }
+}
 
 void transmit_byte(byte data) {
   bitcount = 0;
@@ -92,8 +113,11 @@ ISR(TIMER2_COMPA_vect){
 
   if (CLOCK_COUNTER == baudrate) { 
     CLOCK_COUNTER = 0;
-    digitalWrite(13, digitalRead(13)^1);
     send_bit = true;
+  }
+  // close the window
+  if (CLOCK_COUNTER == 50) { 
+    send_bit = false;
   }
 }
 //--------------------------------------------------------------------------
@@ -134,5 +158,13 @@ void status(){
   Serial.println(baudrate);   
   Serial.println("------------------------------------------");
 }
+
+
+void interval(long & time){
+    long t = micros() - time;
+    time = micros();
+    Serial.print("\t");  Serial.print(t);  Serial.println(" microseconds "); 
+}
+
 
 
