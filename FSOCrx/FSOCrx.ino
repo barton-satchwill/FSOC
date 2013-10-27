@@ -8,6 +8,10 @@
 // gnd o----/\/\/\-|---e[phototrans]c-----o 5v
 //            10k   
 //----------------------------------------------------
+//sent
+//1010101 00101110001011100101111001110000010100101111001110000010100001100000100010111101001111001110010111
+//     00 00101110001011100101111001110000010100101111001110000010100001100000100010111101001111001110010111
+//received
 
 
 #define LEDSENSOR A0
@@ -46,7 +50,8 @@ void setup() {
   
   
 void loop() {
-  test();
+//  test();
+  receive();
   if (Serial.available()){
     char c = Serial.read();
     if (c == '!') {
@@ -58,13 +63,12 @@ void loop() {
 void receive(){
   if (syncd && write_bit){
     write_a_bit();
-    bitcount++;
+//    bitcount++;
     write_bit = false;
-    if (bitcount == 8){
+    if (bitcount == 7){
       bitcount = 0;
     }      
   }
-
   if (syncd && sample){
     sample_a_bit();
     sample = false;
@@ -112,11 +116,14 @@ void write_a_bit(){
     bitvalue = 0;
   }
   bitWrite(aByte, bitcount, bitvalue);
+  Serial.print(bitvalue);
   samplecount = 0;
   bitcount++;
   if (bitcount == 7){
     bitcount = 0; 
+    Serial.print("--->");
     Serial.write(aByte);
+    Serial.println();
   aByte = 0;
   }
   bitvalue=0;
@@ -136,20 +143,27 @@ int getSensorReading(int sensorPin){
 
 
 void synchronise(){
-  int fliplimit = 8;
+  int fliplimit = 9;
   int flipcount = 0;
   
   while (!syncd){
     int state = getSensorReading(LEDSENSOR);
     if (state != previousstate ) {
+      bitWrite(aByte, flipcount, state);
+      Serial.print("setting bit "); Serial.print(flipcount);Serial.print("-->"); 
+      for(int i=7; i>=0; i--){Serial.print(bitRead(aByte, i));}
+      Serial.println();
+//      Serial.print(bitvalue);
+      //Serial.print("flip "); Serial.print(flipcount); Serial.print(": from ");Serial.print(previousstate); Serial.print(" to "); Serial.println(state);
       previousstate = state; 
       flipcount++; 
     }
-    if (flipcount == fliplimit){
+    if (aByte == 85){
       syncd = true;
+      bitcount = 5;
 //      sample = true;
 //      write_bit = false;
-      CLOCK_COUNTER = (baudrate/10)-1;
+      CLOCK_COUNTER = 0;
     }    
   }
   Serial.println("synchronised!");
@@ -180,7 +194,7 @@ ISR(TIMER2_COMPA_vect){
     CLOCK_COUNTER = 0;
   }
   else
-  if (CLOCK_COUNTER%(baudrate/5) == 0) { 
+  if (CLOCK_COUNTER%75 == 0) { 
     sample = true;
   }
 }

@@ -40,8 +40,8 @@ void loop() {
     if (c == '!') {
       configure();
     } else {
-//      transmit_byte(c);
-      test();
+      transmit_byte(c);
+//      test();
     }
   }
 //  for (int i = 0; i < 5; i++){ test();}
