@@ -9,7 +9,7 @@
 #define LEDlaser 12
 volatile int CLOCK_COUNTER = 0;
 volatile boolean send_bit = false;
-volatile int baudrate = 150;
+volatile int baudrate = 25;
 int bitcount = 0;
 long bitclock = 0;
 
@@ -26,9 +26,9 @@ void loop() {
   // send the message header
   transmit_byte(B01010101);
 //----------- debugging -----------
-//  for(char c=33; c<127; c++){
-//    transmit_byte(c);
-//  }
+  for(char c=33; c<127; c++){
+    transmit_byte(c);
+  }
 //---------------------------------
   while (Serial.available()){
     char c = Serial.read();
@@ -40,7 +40,7 @@ void loop() {
     }
   }
   //send the trailer
-//  transmit_byte(B00000000);
+  transmit_byte(B00000000);
 }
 
 

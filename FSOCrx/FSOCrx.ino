@@ -13,7 +13,11 @@ volatile boolean sample = false;
 volatile boolean write_bit = false;
 volatile boolean syncd = false;
 volatile int g_previousstate = 0;
-int g_baudrate = 150; 
+int g_baudrate = 25; 
+int sampleWindowEdge = 10;
+//int sampleWindowWidth = g_baudrate - (2*sampleWindowEdge);
+int g_sampleWindowOpen = sampleWindowEdge;
+int g_sampleWindowClose = g_baudrate - sampleWindowEdge;
 //-------------------------
 //int samplesize = 10;
 //int threshold = 450;
@@ -41,7 +45,7 @@ void setup() {
   bitclock = micros();
   byteclock = micros();
   pinMode(8, INPUT);
-//  syncd = true;
+  //  syncd = true;
 }
 
 
@@ -97,22 +101,28 @@ void test(){
 }
 
 
+void resync(){
+  volatile double x = (g_samplevalue/(double)g_samplecount);
+  if (x>0.2 && x<0.8){ 
+    //Serial.print("X"); 
+    CLOCK_COUNTER=0;
+  }
+}
+
+
 
 void sample_a_bit(){
   g_samplecount++;  // very sloppy using this global
   int sensorReading = getSensorReading(LEDSENSOR);
-//  if(g_oldbit != sensorReading) {
-//    CLOCK_COUNTER=0;
-//  }
   g_oldbit = sensorReading;
   int p = digitalRead(8);
   g_samplevalue += sensorReading;
   phantom += p;
+  resync();
 }
 
 
 void write_a_bit(){
-  debugBitSample();
   if ( (g_samplevalue/(double)g_samplecount) > 0.5){
     g_bitvalue = 1;
   } else{
@@ -152,13 +162,13 @@ void synchronise(){
     int state = getSensorReading(LEDSENSOR);
     if (state != g_previousstate ) {
       bitWrite(g_aByte, flipcount, state);
-//      Serial.print("setting bit "); 
-//      Serial.print(flipcount);
-//      Serial.print("-->"); 
-//      for(int i=7; i>=0; i--){
-//        Serial.print(bitRead(g_aByte, i));
-//      }
-//      Serial.println();
+      //      Serial.print("setting bit "); 
+      //      Serial.print(flipcount);
+      //      Serial.print("-->"); 
+      //      for(int i=7; i>=0; i--){
+      //        Serial.print(bitRead(g_aByte, i));
+      //      }
+      //      Serial.println();
       g_previousstate = state; 
       flipcount++; 
     }
@@ -196,10 +206,10 @@ ISR(TIMER2_COMPA_vect){
     CLOCK_COUNTER = 0;
   }
 
-  if (CLOCK_COUNTER > (110) || CLOCK_COUNTER < (g_baudrate-110)) { 
-//    if(moresample)
+  if (CLOCK_COUNTER > g_sampleWindowOpen || CLOCK_COUNTER < g_sampleWindowClose) { 
     sample = true;
   }
 }
+
 
 
