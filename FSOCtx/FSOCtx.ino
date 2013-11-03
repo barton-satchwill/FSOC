@@ -9,7 +9,7 @@
 #define LEDlaser 12
 volatile int CLOCK_COUNTER = 0;
 volatile boolean send_bit = false;
-volatile int baudrate = 25;
+volatile int baudrate = 15;
 int bitcount = 0;
 long bitclock = 0;
 
