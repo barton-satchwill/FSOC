@@ -1,35 +1,29 @@
-
-//----------------------------------------------------
-// gnd o\---------[sensor]-----o A0
-//       \----------[led]------o 13 tell-tale
-//        \---------[led]------o 12 for tuning
 //----------------------------------------------------
 // A0  o-----------|
 // gnd o----/\/\/\-|---e[phototrans]c-----o 5v
 //            10k   
 //----------------------------------------------------
-//sent
-//1010101 00101110001011100101111001110000010100101111001110000010100001100000100010111101001111001110010111
-//     00 00101110001011100101111001110000010100101111001110000010100001100000100010111101001111001110010111
-//received
-
 
 #define LEDSENSOR A0
 #define LEDrx 11
 //-------------------------
 volatile int CLOCK_COUNTER = 0;
+volatile boolean moresample = false;
 volatile boolean sample = false;
 volatile boolean write_bit = false;
 volatile boolean syncd = false;
-volatile int previousstate = 0;
-int baudrate = 300; 
+volatile int g_previousstate = 0;
+int g_baudrate = 150; 
 //-------------------------
-int samplesize = 10;
-int threshold = 450;
-volatile int samplecount = 0;
-volatile int bitcount = 0;
-volatile int bitvalue=0;
-volatile  byte aByte;
+//int samplesize = 10;
+//int threshold = 450;
+volatile int g_samplecount = 0;
+volatile int g_samplevalue = 0;
+volatile int g_bitcount = 0;
+volatile int g_bitvalue=0;
+volatile int g_oldbit=0;
+volatile byte g_aByte;
+volatile long phantom = 0;
 //-------------------------
 long tclock = 0;
 long writeclock = 0;
@@ -46,11 +40,13 @@ void setup() {
   writeclock = micros();
   bitclock = micros();
   byteclock = micros();
+  pinMode(8, INPUT);
+//  syncd = true;
 }
-  
-  
+
+
 void loop() {
-//  test();
+  //  test();
   receive();
   if (Serial.available()){
     char c = Serial.read();
@@ -63,15 +59,16 @@ void loop() {
 void receive(){
   if (syncd && write_bit){
     write_a_bit();
-//    bitcount++;
     write_bit = false;
-    if (bitcount == 7){
-      bitcount = 0;
+    moresample = true;
+    if (g_bitcount == 7){
+      g_bitcount = 0;
     }      
   }
   if (syncd && sample){
     sample_a_bit();
     sample = false;
+    moresample = false;
   }
 }
 
@@ -81,10 +78,10 @@ void test(){
     Serial.print("write");
     interval(writeclock);
     delayMicroseconds(100);
-    bitcount++;
+    g_bitcount++;
     write_bit = false;
-    if (bitcount == 8){
-      bitcount = 0;
+    if (g_bitcount == 8){
+      g_bitcount = 0;
       Serial.print("byte");
       interval(byteclock);
       Serial.println();
@@ -102,42 +99,47 @@ void test(){
 
 
 void sample_a_bit(){
-  samplecount++;
+  g_samplecount++;  // very sloppy using this global
   int sensorReading = getSensorReading(LEDSENSOR);
-  bitvalue += sensorReading;
+//  if(g_oldbit != sensorReading) {
+//    CLOCK_COUNTER=0;
+//  }
+  g_oldbit = sensorReading;
+  int p = digitalRead(8);
+  g_samplevalue += sensorReading;
+  phantom += p;
 }
 
 
 void write_a_bit(){
-  if ( (bitvalue / (double)samplecount) > 0.5){
-    bitvalue = 1;
+  debugBitSample();
+  if ( (g_samplevalue/(double)g_samplecount) > 0.5){
+    g_bitvalue = 1;
+  } else{
+    g_bitvalue = 0;
   }
-  else{
-    bitvalue = 0;
-  }
-  bitWrite(aByte, bitcount, bitvalue);
-  Serial.print(bitvalue);
-  samplecount = 0;
-  bitcount++;
-  if (bitcount == 7){
-    bitcount = 0; 
+  bitWrite(g_aByte, g_bitcount, g_bitvalue);
+  moresample = true;
+  Serial.print(g_bitvalue);
+  g_samplecount = 0;
+  g_bitvalue = 0;
+  g_samplevalue = 0;
+  g_bitcount++;
+  if (g_bitcount == 7){
+    //------ debugging ------   
     Serial.print("--->");
-    Serial.write(aByte);
+    Serial.write(g_aByte);
     Serial.println();
-  aByte = 0;
+    //interval(bitclock);
+    //----------------------
+    g_bitcount = 0; 
+    g_aByte = 0;
   }
-  bitvalue=0;
 }
 
 
 int getSensorReading(int sensorPin){
-  long bitValue=0;
-  for (int i=0; i<samplesize; i++){
-    bitValue += (analogRead(sensorPin));
-    delayMicroseconds(10);
-  }
-  bitValue = (bitValue/samplesize);
-  return (bitValue > threshold);
+  return digitalRead(sensorPin);
 }
 
 
@@ -145,24 +147,24 @@ int getSensorReading(int sensorPin){
 void synchronise(){
   int fliplimit = 9;
   int flipcount = 0;
-  
+
   while (!syncd){
     int state = getSensorReading(LEDSENSOR);
-    if (state != previousstate ) {
-      bitWrite(aByte, flipcount, state);
-      Serial.print("setting bit "); Serial.print(flipcount);Serial.print("-->"); 
-      for(int i=7; i>=0; i--){Serial.print(bitRead(aByte, i));}
-      Serial.println();
-//      Serial.print(bitvalue);
-      //Serial.print("flip "); Serial.print(flipcount); Serial.print(": from ");Serial.print(previousstate); Serial.print(" to "); Serial.println(state);
-      previousstate = state; 
+    if (state != g_previousstate ) {
+      bitWrite(g_aByte, flipcount, state);
+//      Serial.print("setting bit "); 
+//      Serial.print(flipcount);
+//      Serial.print("-->"); 
+//      for(int i=7; i>=0; i--){
+//        Serial.print(bitRead(g_aByte, i));
+//      }
+//      Serial.println();
+      g_previousstate = state; 
       flipcount++; 
     }
-    if (aByte == 85){
+    if (g_aByte == 85){
       syncd = true;
-      bitcount = 5;
-//      sample = true;
-//      write_bit = false;
+      g_bitcount = 5;
       CLOCK_COUNTER = 0;
     }    
   }
@@ -189,87 +191,15 @@ void setupTimer() {
 ISR(TIMER2_COMPA_vect){
   CLOCK_COUNTER++;
 
-  if (CLOCK_COUNTER == baudrate) { 
+  if (CLOCK_COUNTER == g_baudrate) { 
     write_bit = true;
     CLOCK_COUNTER = 0;
   }
-  else
-  if (CLOCK_COUNTER%75 == 0) { 
+
+  if (CLOCK_COUNTER > (110) || CLOCK_COUNTER < (g_baudrate-110)) { 
+//    if(moresample)
     sample = true;
   }
-}
-
-//--------------------------------------------------------------------------
-void configure(){
-  status();
-  while(!Serial.available()) {
-    ;
-  }
-  while(Serial.available())
-  {
-    byte s = Serial.read();
-    switch(s){
-    case 'b':
-      baudrate = Serial.parseInt();
-      Serial.print("baud rate = ");  Serial.println(baudrate);
-      break;
-    case 's':
-      Serial.print("synchronise...");
-      syncd = false;
-      synchronise();
-      break;
-    case 't':
-      tune();
-      break;
-    case 'z':
-      samplesize = Serial.parseInt();
-      Serial.print("sample size = "); Serial.println(samplesize);
-      break;
-    case '\\':
-      Serial.println();
-      Serial.println("--------------------------------------------------------");
-      break;
-    default:
-      Serial.println("default");
-      break;
-    }
-  }
-}
-
-
-void status(){
-  Serial.println("---------------------------------------------");
-  Serial.print("baud rate = ");    Serial.println(baudrate);
-  Serial.print("sample size = ");  Serial.println(samplesize);
-  Serial.print("threshold = ");    Serial.println(threshold);
-  Serial.println("---------------------------------------------");
-}
-
-
-void tune() {
-  Serial.print("tuning...");
-  for (byte data = '\!'; data <= '\~'; data++){
-    for (byte mask = 00000001; mask>0; mask <<= 1){
-      digitalWrite(13, (data & mask) > 0);
-      digitalWrite(12, (data & mask) > 0);
-      delayMicroseconds(80);
-      int val = getSensorReading(LEDSENSOR);
-      if (((data & mask) > 0) > val){ 
-        --threshold; 
-      }
-      if (((data & mask) > 0) < val){ 
-        ++threshold; 
-      }
-    }
-  }
-  Serial.print("new threshold is ");
-  Serial.println(threshold);
-}
-
-void interval(long & time){
-    long t = micros() - time;
-    time = micros();
-    Serial.print("\t");  Serial.print(t);  Serial.println(" microseconds "); 
 }
 
 

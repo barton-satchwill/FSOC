@@ -7,33 +7,28 @@
 //----------------------------------------------------
 
 #define LEDlaser 12
-#define LEDtx 13
 volatile int CLOCK_COUNTER = 0;
 volatile boolean send_bit = false;
-volatile int baudrate = 300; 
+volatile int baudrate = 150;
 int bitcount = 0;
-//----------- debugging -----------
-char * buffer = "Uthis is a test";
-//---------------------------------
 long bitclock = 0;
 
 void setup() { 
   Serial.begin(115200); 
   setupTimer();
   pinMode(LEDlaser, OUTPUT);
-  pinMode(LEDtx, OUTPUT);
+  pinMode(13, OUTPUT);
   digitalWrite(LEDlaser, LOW);
-  digitalWrite(LEDtx, LOW);
   Serial.println("=========== Transmitter ===========");
 } 
 
 void loop() { 
+  // send the message header
+  transmit_byte(B01010101);
 //----------- debugging -----------
-//  for(int i=0; i<15; i++){
-//    transmit_byte(buffer[i]);
+//  for(char c=33; c<127; c++){
+//    transmit_byte(c);
 //  }
-//  Serial.println();
-//  delay(2000);
 //---------------------------------
   while (Serial.available()){
     char c = Serial.read();
@@ -44,7 +39,8 @@ void loop() {
 //      test();
     }
   }
-//  for (int i = 0; i < 5; i++){ test();}
+  //send the trailer
+//  transmit_byte(B00000000);
 }
 
 
@@ -70,16 +66,20 @@ void transmit_byte(byte data) {
   bitcount = 0;
   while (bitcount < 7){
     if(send_bit){
+//        interval(bitclock);
+
+      digitalWrite(13, bitRead(data, bitcount));
       digitalWrite(LEDlaser, bitRead(data, bitcount++));
-      Serial.print(digitalRead(LEDlaser));
+      Serial.println(digitalRead(LEDlaser));
       send_bit = false;
       //----------- debugging -----------
       if (bitcount == 7) { 
         Serial.print("-->[");
         Serial.write(data);
-        Serial.print("]-->");
-        Serial.print(data, BIN);
+        Serial.print("]");
+//        Serial.print(data, BIN);
         Serial.println(); 
+        interval(bitclock);
       }
       //---------------------------------
     }
@@ -88,7 +88,7 @@ void transmit_byte(byte data) {
 
 void preamble(){
   Serial.println("sending preamble");
-  byte preambleByte = 85; // 01010101
+  byte preambleByte = B01010101;
   transmit_byte(preambleByte);
 }
 
@@ -138,9 +138,9 @@ void configure(){
       break;
     case 't':
       Serial.println("transmit");
-      for(int i=0; i<15; i++){
-        transmit_byte(buffer[i]);
-      }
+//      for(int i=0; i<15; i++){
+//        transmit_byte(buffer[i]);
+//      }
       Serial.println();
       break;
     default:
