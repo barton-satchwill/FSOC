@@ -45,7 +45,6 @@ void setup() {
   bitclock = micros();
   byteclock = micros();
   pinMode(8, INPUT);
-  //  syncd = true;
 }
 
 
@@ -64,7 +63,6 @@ void receive(){
   if (syncd && write_bit){
     write_a_bit();
     write_bit = false;
-    moresample = true;
     if (g_bitcount == 7){
       g_bitcount = 0;
     }      
@@ -72,34 +70,8 @@ void receive(){
   if (syncd && sample){
     sample_a_bit();
     sample = false;
-    moresample = false;
   }
 }
-
-void test(){
-  syncd = true;
-  if (syncd && write_bit){
-    Serial.print("write");
-    interval(writeclock);
-    delayMicroseconds(100);
-    g_bitcount++;
-    write_bit = false;
-    if (g_bitcount == 8){
-      g_bitcount = 0;
-      Serial.print("byte");
-      interval(byteclock);
-      Serial.println();
-    }      
-  }
-
-  if (syncd && sample){
-    Serial.print("\tsample");
-    interval(bitclock);
-    delayMicroseconds(100);
-    sample = false;
-  }
-}
-
 
 void resync(){
   volatile double x = (g_samplevalue/(double)g_samplecount);
@@ -125,7 +97,7 @@ void sample_a_bit(){
 void write_a_bit(){
   if ( (g_samplevalue/(double)g_samplecount) > 0.5){
     g_bitvalue = 1;
-  } else{
+  } else {
     g_bitvalue = 0;
   }
   bitWrite(g_aByte, g_bitcount, g_bitvalue);
@@ -154,27 +126,13 @@ int getSensorReading(int sensorPin){
 
 
 
-void synchronise(){
-  int fliplimit = 9;
-  int flipcount = 0;
 
+void synchronise(){
   while (!syncd){
     int state = getSensorReading(LEDSENSOR);
-    if (state != g_previousstate ) {
-      bitWrite(g_aByte, flipcount, state);
-      //      Serial.print("setting bit "); 
-      //      Serial.print(flipcount);
-      //      Serial.print("-->"); 
-      //      for(int i=7; i>=0; i--){
-      //        Serial.print(bitRead(g_aByte, i));
-      //      }
-      //      Serial.println();
-      g_previousstate = state; 
-      flipcount++; 
-    }
-    if (g_aByte == 85){
+    if (state) {
       syncd = true;
-      g_bitcount = 5;
+      g_bitcount = 6;
       CLOCK_COUNTER = 0;
     }    
   }

@@ -1,3 +1,28 @@
+void test(){
+  syncd = true;
+  if (syncd && write_bit){
+    Serial.print("write");
+    interval(writeclock);
+    delayMicroseconds(100);
+    g_bitcount++;
+    write_bit = false;
+    if (g_bitcount == 8){
+      g_bitcount = 0;
+      Serial.print("byte");
+      interval(byteclock);
+      Serial.println();
+    }      
+  }
+
+  if (syncd && sample){
+    Serial.print("\tsample");
+    interval(bitclock);
+    delayMicroseconds(100);
+    sample = false;
+  }
+}
+
+
 void debugBitSample(){
   volatile double x = (g_samplevalue/(double)g_samplecount);
   volatile double z = (phantom/(double)g_samplecount);

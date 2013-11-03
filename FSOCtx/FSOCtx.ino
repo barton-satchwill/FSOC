@@ -24,7 +24,7 @@ void setup() {
 
 void loop() { 
   // send the message header
-  transmit_byte(B01010101);
+  transmit_byte(B00000001);
 //----------- debugging -----------
   for(char c=33; c<127; c++){
     transmit_byte(c);
