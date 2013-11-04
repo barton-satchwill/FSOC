@@ -1,11 +1,11 @@
 void test(){
-  syncd = true;
-  if (syncd && write_bit){
+  g_syncd = true;
+  if (g_syncd && g_write_bit){
     Serial.print("write");
     interval(writeclock);
     delayMicroseconds(100);
     g_bitcount++;
-    write_bit = false;
+    g_write_bit = false;
     if (g_bitcount == 8){
       g_bitcount = 0;
       Serial.print("byte");
@@ -14,11 +14,11 @@ void test(){
     }      
   }
 
-  if (syncd && sample){
+  if (g_syncd && g_sample){
     Serial.print("\tsample");
     interval(bitclock);
     delayMicroseconds(100);
-    sample = false;
+    g_sample = false;
   }
 }
 
@@ -26,15 +26,16 @@ void test(){
 void debugBitSample(){
   volatile double x = (g_samplevalue/(double)g_samplecount);
   volatile double z = (phantom/(double)g_samplecount);
+  Serial.println();
   //-----------------------------------------------------
-  Serial.print("\nphantom: ");
-  Serial.print(phantom);
-  Serial.print("/");
-  Serial.print(g_samplecount);
-  Serial.print(" = ");
-  Serial.print(z);
-  Serial.print("-->  \t");
-  phantom = 0;
+//  Serial.print("phantom: ");
+//  Serial.print(phantom);
+//  Serial.print("/");
+//  Serial.print(g_samplecount);
+//  Serial.print(" = ");
+//  Serial.print(z);
+//  Serial.print("-->  \t");
+//  phantom = 0;
   //-----------------------------------------------------
   Serial.print(g_samplevalue);
   Serial.print("/");
@@ -47,6 +48,14 @@ void debugBitSample(){
   Serial.print("\t");
   Serial.print(g_bitcount);
   Serial.print(": ");
+  
+  
+  volatile double confidence;
+  if(x>0.5){confidence = x;}else{confidence = 1-x;}
+  Serial.print("confidence: ");
+  Serial.print(confidence);
+  Serial.print(": \n");
+    
 }
 
 
@@ -79,7 +88,7 @@ void configure(){
       break;
     case 's':
       Serial.print("synchronise...");
-      syncd = false;
+      g_syncd = false;
       synchronise();
       break;
     case '\\':
