@@ -5,7 +5,6 @@
 //----------------------------------------------------
 
 #define LEDSENSOR A0
-#define LEDrx 11
 //-------------------------
 volatile int CLOCK_COUNTER = 0;
 volatile boolean g_sample = false;
@@ -20,32 +19,18 @@ volatile int g_samplecount = 0;
 volatile int g_samplevalue = 0;
 volatile int g_bitcount = 0;
 volatile int g_bitvalue=0;
-volatile int g_oldbit=0;
 volatile byte g_aByte;
-volatile long phantom = 0;
 //-------------------------
-long tclock = 0;
-long writeclock = 0;
-long bitclock = 0;
-long byteclock = 0;
 
 void setup() {
   setupTimer();
   Serial.begin(115200);
   pinMode(LEDSENSOR, INPUT);
-  pinMode(LEDrx, OUTPUT);
   Serial.println("=========== Reciever ===========");
-  tclock = micros();
-  writeclock = micros();
-  bitclock = micros();
-  byteclock = micros();
-  pinMode(8, INPUT);
-  Serial.println(writeclock - tclock);
 }
 
 
 void loop() {
-  //  test();
   receive();
   if (Serial.available()){
     char c = Serial.read();
@@ -59,9 +44,6 @@ void receive(){
   if (g_syncd && g_write_bit){
     write_a_bit();
     g_write_bit = false;
-    if (g_bitcount == 7){
-      g_bitcount = 0;
-    }      
   }
   if (g_syncd && g_sample){
     g_sample_a_bit();
@@ -72,53 +54,18 @@ void receive(){
 
 
 
-void resync(){
-  volatile double x = (g_samplevalue/(double)g_samplecount);
-  volatile double confidence;
-  if(x>0.5){
-    confidence = x;
-  }
-  else{
-    confidence = 1-x;
-  }
-//  if (confidence < 0.8){ 
-//    Serial.print(confidence);
-//    Serial.println(" ==> resync"); 
-    CLOCK_COUNTER-=(1-confidence)*g_baudrate;
-//  }
-}
-
-
-
 void g_sample_a_bit(){
   g_samplecount++;  // very sloppy using this global
   int sensorReading = getSensorReading(LEDSENSOR);
-
-  //  if(sensorReading != g_oldbit){
-  //    Serial.print("...");
-  //  }
-  //  Serial.print(sensorReading);
-
-  g_oldbit = sensorReading;
-  int p = digitalRead(8);
   g_samplevalue += sensorReading;
-  phantom += p;
 }
 
 
 void write_a_bit(){
-  if ( (g_samplevalue/(double)g_samplecount) > 0.5){
-    g_bitvalue = 1;
-  } else {
-    g_bitvalue = 0;
-  }
+  resynchronise();
   bitWrite(g_aByte, g_bitcount, g_bitvalue);
-  //  debugBitg_sample();
-  resync();
   Serial.print(g_bitvalue);
-
   g_samplecount = 0;
-  g_oldbit = g_bitvalue;
   g_samplevalue = 0;
   g_bitcount++;
   if (g_bitcount == 7){
@@ -138,8 +85,6 @@ int getSensorReading(int sensorPin){
 }
 
 
-
-
 void synchronise(){
   while (!g_syncd){
     int state = getSensorReading(LEDSENSOR);
@@ -152,6 +97,19 @@ void synchronise(){
   Serial.println("synchronised!");
 }
 
+
+void resynchronise(){
+  volatile double sampleAverage = (g_samplevalue/(double)g_samplecount);
+  volatile double confidence;
+  if(sampleAverage > 0.5){
+    confidence = sampleAverage;
+    g_bitvalue = 1;
+  } else{
+    confidence = 1-sampleAverage;
+    g_bitvalue = 0;
+  }
+    CLOCK_COUNTER-=(1-confidence)*g_baudrate;
+}
 
 //--------------------------------------------------------------------------
 
@@ -181,7 +139,5 @@ ISR(TIMER2_COMPA_vect){
     g_sample = true;
   }
 }
-
-
 
 
