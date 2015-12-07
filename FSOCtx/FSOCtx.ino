@@ -23,6 +23,7 @@ void setup() {
   pinMode(led, OUTPUT);
   digitalWrite(laser, LOW);
   digitalWrite(led, LOW);
+  delay(5000);
   t.startClock();
   Serial.println("=========== Transmitter ===========");
   sync();
@@ -31,7 +32,6 @@ void setup() {
 
 void loop() {
   for(char c=33; c<127; c++) {
-      if(wordcounter++ == 4) { wordcounter = 0; sync(); }
     sendChar(c);
   }
 }

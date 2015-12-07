@@ -26,7 +26,7 @@ void setup() {
   pinMode(sensor, INPUT);
   pinMode(led, OUTPUT);
   digitalWrite(led, LOW);
-  t.startClock();
+
   Serial.println("============= Receiver ============"); 
   sync();
 }
@@ -35,8 +35,6 @@ void setup() {
 void loop() { 
   char c = receiveChar();
 
-  if (wordcounter++ == 4) { wordcounter = 0; sync(); }
-
   #ifdef DEBUG
   for (int i=0; i<8; i++){
     Serial.print(bitRead(c,i));
@@ -44,8 +42,7 @@ void loop() {
   Serial.print("-->[");
   Serial.write(c);
   Serial.print("]");
-
-  if (c == frameByte) {Serial.print(" ----> Frame Byte"); }// else { sync(); }
+  if (c == frameByte) {Serial.print(" ----> Frame Byte"); }
   Serial.println();
   #endif  
 }
@@ -67,32 +64,16 @@ char receiveChar() {
 }
 
 
-void sync() { 
-  Serial.println("----------------");
-  int bitcount = 0;
-  char c = B00000000;
-  while (c != frameByte) {
-    if (rx){
-      rx = false;
-      current = digitalRead(sensor);
-      bitWrite(c, bitcount, current);
-      digitalWrite(led, current);
-
-      #ifdef DEBUG
-      for (int i=7; i>=0; i--){ Serial.print(bitRead(c,i)); }
-      Serial.print(" --- ");
-      Serial.println(bitcount);
-      #endif  
-
-      if (c != frameByte) {
-        Serial.print("*");
-        c = c << 1;
-      }
-      else {
-        Serial.println("sync'd!");
-      }
-    }
+void sync() {
+  // start the clock when the signal changes
+  Serial.println("----- syncing ------");
+  int val = digitalRead(sensor);
+  int flag = !val;
+  while (flag != val){
+    val = digitalRead(sensor);
   }
+  t.startClock(); 
+  Serial.println("clock started");
 }
 
 
