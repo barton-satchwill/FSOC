@@ -12,6 +12,9 @@
 
 volatile boolean tx = false;
 Timer t = Timer(1, clock, 1);
+byte frameByte = B01010101;
+  int wordcounter = 0;
+int skip = 0;
 
 
 void setup() { 
@@ -22,11 +25,13 @@ void setup() {
   digitalWrite(led, LOW);
   t.startClock();
   Serial.println("=========== Transmitter ===========");
+  sync();
 } 
 
 
 void loop() {
   for(char c=33; c<127; c++) {
+      if(wordcounter++ == 4) { wordcounter = 0; sync(); }
     sendChar(c);
   }
 }
@@ -46,13 +51,24 @@ void sendChar(char c){
         Serial.print("-->[");
         Serial.write(c);
         Serial.print("]");
+        Serial.print(" : ");
+        Serial.print(skip);
         Serial.println(); 
       }
+      skip = 0;
       #endif
     }
+    else
+      skip++;
   }
 }
 
+
+void sync(){
+  sendChar(B00000000);
+  sendChar(B00000000);
+  sendChar(frameByte);
+}
 
 void clock(int x){
   tx = true;
