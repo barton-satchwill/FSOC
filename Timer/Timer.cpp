@@ -21,9 +21,13 @@ void Timer::startClock() {
   TCCR1B = B00001100;
   TCCR1A = B00000000;
   TIMSK1 = B00000010;
-  OCR1A = 6249; // 10 Hz
-  // OCR1A = 624; // 100 Hz
+  // OCR1A = 6249; // 10 Hz
   // OCR1A = 2499; // 25 Hz
+  // OCR1A = 1240; // 50 Hz
+  // OCR1A = 624; // 100 Hz
+  OCR1A = 124; // 500 Hz
+  // OCR1A = 77; // 800 Hz
+  // OCR1A = 62; // 1 kHz
 }
 
 void Timer::stopClock(){

@@ -21,13 +21,11 @@ int previous = 0;
 int current = 0;
 
 void setup() {
-  #ifdef DEBUG
-  pinMode(led, OUTPUT);
-  digitalWrite(led, LOW);
-  #endif
   Serial.begin(9600);
   Serial.println("============= Receiver ============");
   pinMode(sensor, INPUT);
+  pinMode(led, OUTPUT);
+  digitalWrite(led, LOW);
   sync();
 }
 
@@ -78,6 +76,7 @@ void sync() {
   #endif
 
   t.stopClock();
+  Serial.println();
   while (!digitalRead(sensor)) {
     ; // do nothing
   }

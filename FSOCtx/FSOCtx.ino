@@ -38,7 +38,7 @@ void setup() {
 
 void loop() {
   // for(char c=33; c<127; c++) {
-  for(char c=65; c<76; c++) {
+  for(char c=65; c<91; c++) {
     sendChar(c);
   }
   sync();
