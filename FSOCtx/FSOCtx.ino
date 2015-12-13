@@ -5,7 +5,7 @@
 //         \---------[led]------o 12
 //----------------------------------------------------
 
-#define DEBUG
+// #define DEBUG
 
 #define led 12
 #define laser 13
@@ -16,21 +16,24 @@ byte frameByte = B01010101;
 int skip = 0;
 
 
-void setup() { 
+void setup() {
+  #ifdef DEBUG
   for (int i = 3; i<14; i++){
     pinMode(i, OUTPUT);
     digitalWrite(i,LOW);
   }
-  Serial.begin(9600); 
-  pinMode(laser, OUTPUT);
   pinMode(led, OUTPUT);
-  digitalWrite(laser, LOW);
   digitalWrite(led, LOW);
+  Serial.begin(9600);
+  Serial.println("=========== Transmitter ===========");
+  #endif
+
+  pinMode(laser, OUTPUT);
+  digitalWrite(laser, LOW);
   delay(5000);
   t.startClock();
-  Serial.println("=========== Transmitter ===========");
   sync();
-} 
+}
 
 
 void loop() {
@@ -47,22 +50,24 @@ void sendChar(char c){
   while (bitcount < 8){
     if (tx) {
       tx=false;
+      digitalWrite(laser, bitRead(c,bitcount));
+
+      #ifdef DEBUG
       Serial.print(bitRead(c,bitcount));
       digitalWrite(led, bitRead(c,bitcount));
-      digitalWrite(laser, bitRead(c,bitcount));
       digitalWrite(3, digitalRead(3)^1);
-      bitcount++;
-      #ifdef DEBUG
-      if (bitcount == 8) { 
+      if (bitcount == 8) {
         Serial.print("-->[");
         Serial.write(c);
         Serial.print("]");
         Serial.print(" : ");
         Serial.print(skip);
-        Serial.println(); 
+        Serial.println();
       }
       skip = 0;
       #endif
+
+      bitcount++;
     }
     else
       skip++;
@@ -71,10 +76,13 @@ void sendChar(char c){
 
 
 void sync(){
+  #ifdef DEBUG
   Serial.println("----- syncing ------");
- sendChar(B00000000);
- sendChar(B10000000);
- sendChar(frameByte);
+  #endif
+
+  sendChar(B00000000);
+  sendChar(B10000000);
+  sendChar(frameByte);
 }
 
 void clock(int x){

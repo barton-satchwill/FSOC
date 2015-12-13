@@ -3,10 +3,10 @@
 //----------------------------------------------------
 // A0  o-----------|
 // gnd o----/\/\/\-|-------e[phototrans]c-------o 5v
-//            10k   
+//            10k
 //----------------------------------------------------
 
-#define DEBUG
+// #define DEBUG
 
 #define led 13
 #define sensor A0
@@ -21,17 +21,18 @@ int previous = 0;
 int current = 0;
 
 void setup() {
-  Serial.begin(9600); 
-  pinMode(sensor, INPUT);
+  #ifdef DEBUG
   pinMode(led, OUTPUT);
   digitalWrite(led, LOW);
-
-  Serial.println("============= Receiver ============"); 
+  #endif
+  Serial.begin(9600);
+  Serial.println("============= Receiver ============");
+  pinMode(sensor, INPUT);
   sync();
 }
 
 
-void loop() { 
+void loop() {
   char c = receiveChar();
 
   #ifdef DEBUG
@@ -39,18 +40,23 @@ void loop() {
     Serial.print(bitRead(c,i));
   }
   Serial.print("-->[");
+  #endif
+
   Serial.write(c);
+
+  #ifdef DEBUG
   Serial.print("]");
   if (c == frameByte) {Serial.print(" ----> Frame Byte"); }
   Serial.println();
-  #endif  
+  #endif
+
   if (c == B00000000) {
     sync();
   }
 }
 
 
-char receiveChar() { 
+char receiveChar() {
   int bitcount = 0;
   char c;
   while (bitcount < 8) {
@@ -67,13 +73,19 @@ char receiveChar() {
 
 
 void sync() {
-  t.stopClock();
+  #ifdef DEBUG
   Serial.println("----- syncing ------");
+  #endif
+
+  t.stopClock();
   while (!digitalRead(sensor)) {
     ; // do nothing
   }
   t.startClock();
+
+  #ifdef DEBUG
   Serial.println("clock started");
+  #endif
 }
 
 
