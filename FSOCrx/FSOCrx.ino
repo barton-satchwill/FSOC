@@ -19,7 +19,6 @@ long i = 0;
 
 int previous = 0;
 int current = 0;
-  int wordcounter = 0;
 
 void setup() {
   Serial.begin(9600); 
@@ -36,7 +35,7 @@ void loop() {
   char c = receiveChar();
 
   #ifdef DEBUG
-  for (int i=0; i<8; i++){
+  for (int i=7; i>=0; i--){
     Serial.print(bitRead(c,i));
   }
   Serial.print("-->[");
@@ -45,6 +44,9 @@ void loop() {
   if (c == frameByte) {Serial.print(" ----> Frame Byte"); }
   Serial.println();
   #endif  
+  if (c == B00000000) {
+    sync();
+  }
 }
 
 
@@ -65,14 +67,12 @@ char receiveChar() {
 
 
 void sync() {
-  // start the clock when the signal changes
+  t.stopClock();
   Serial.println("----- syncing ------");
-  int val = digitalRead(sensor);
-  int flag = !val;
-  while (flag != val){
-    val = digitalRead(sensor);
+  while (!digitalRead(sensor)) {
+    ; // do nothing
   }
-  t.startClock(); 
+  t.startClock();
   Serial.println("clock started");
 }
 

@@ -13,11 +13,14 @@
 volatile boolean tx = false;
 Timer t = Timer(1, clock, 1);
 byte frameByte = B01010101;
-  int wordcounter = 0;
 int skip = 0;
 
 
 void setup() { 
+  for (int i = 3; i<14; i++){
+    pinMode(i, OUTPUT);
+    digitalWrite(i,LOW);
+  }
   Serial.begin(9600); 
   pinMode(laser, OUTPUT);
   pinMode(led, OUTPUT);
@@ -31,9 +34,11 @@ void setup() {
 
 
 void loop() {
-  for(char c=33; c<127; c++) {
+  // for(char c=33; c<127; c++) {
+  for(char c=65; c<76; c++) {
     sendChar(c);
   }
+  sync();
 }
 
 
@@ -45,6 +50,7 @@ void sendChar(char c){
       Serial.print(bitRead(c,bitcount));
       digitalWrite(led, bitRead(c,bitcount));
       digitalWrite(laser, bitRead(c,bitcount));
+      digitalWrite(3, digitalRead(3)^1);
       bitcount++;
       #ifdef DEBUG
       if (bitcount == 8) { 
@@ -65,9 +71,10 @@ void sendChar(char c){
 
 
 void sync(){
-  sendChar(B00000000);
-  sendChar(B00000000);
-  sendChar(frameByte);
+  Serial.println("----- syncing ------");
+ sendChar(B00000000);
+ sendChar(B10000000);
+ sendChar(frameByte);
 }
 
 void clock(int x){
