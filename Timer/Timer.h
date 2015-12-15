@@ -18,6 +18,7 @@ class Timer
     void startClock();
     void stopClock();
     void toSerial();
+    void resetClock();
 
   private:
     double frequency;

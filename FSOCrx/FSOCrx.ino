@@ -26,6 +26,7 @@ void setup() {
   pinMode(sensor, INPUT);
   pinMode(led, OUTPUT);
   digitalWrite(led, LOW);
+  t.startClock();
   sync();
 }
 
@@ -75,12 +76,12 @@ void sync() {
   Serial.println("----- syncing ------");
   #endif
 
-  t.stopClock();
   Serial.println();
   while (!digitalRead(sensor)) {
     ; // do nothing
   }
-  t.startClock();
+  t.resetClock();
+  rx=false;
 
   #ifdef DEBUG
   Serial.println("clock started");

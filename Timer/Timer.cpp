@@ -21,7 +21,8 @@ void Timer::startClock() {
   TCCR1B = B00001100;
   TCCR1A = B00000000;
   TIMSK1 = B00000010;
-  // OCR1A = 6249; // 10 Hz
+  TCNT1 = 0;
+  OCR1A = 6249; // 10 Hz
   // OCR1A = 2499; // 25 Hz
   // OCR1A = 1240; // 50 Hz
   // OCR1A = 624; // 100 Hz
@@ -34,8 +35,15 @@ void Timer::stopClock(){
   TCCR1B = 0;
   TCCR1A = 0;
   TIMSK1 = 0;
-  OCR1A = 0;    
+  OCR1A = 0;
+  TCNT1 = 0;
 }
+
+
+void Timer::resetClock() {
+  TCNT1 = 0;  
+}
+
 
 void Timer::toSerial(){
   Serial.print("frequency: ");              Serial.println(frequency);
