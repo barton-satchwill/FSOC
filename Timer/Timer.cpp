@@ -18,7 +18,7 @@ Timer::Timer(double f, void (*interruptHandler)(int), int handlerData ) {
 }
 
 void Timer::startClock() {
-  TCCR1B = B00001100;
+  // TCCR1B = B00001100;
   TCCR1A = B00000000;
   TIMSK1 = B00000010;
   TCNT1 = 0;
@@ -26,9 +26,15 @@ void Timer::startClock() {
   // OCR1A = 2499; // 25 Hz
   // OCR1A = 1240; // 50 Hz
   // OCR1A = 624; // 100 Hz
-  OCR1A = 124; // 500 Hz
+  // OCR1A = 124; // 500 Hz
   // OCR1A = 77; // 800 Hz
-  // OCR1A = 62; // 1 kHz
+  OCR1A = 62; // 1 kHz
+  OCR1A = 31; // 1 kHz
+
+  TCCR1B = B00001010;
+  OCR1A = 1428; // 1.4 kHz
+  OCR1A = 666;  //3 kHZ!!!
+  OCR1A = 499;  //4 kHZ!!!
 }
 
 void Timer::stopClock(){

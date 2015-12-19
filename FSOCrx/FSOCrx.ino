@@ -14,6 +14,7 @@
 volatile boolean rx = false;
 Timer t = Timer(1, clock, 1);
 byte frameByte = B01010101;
+long skip = 0;
 
 long i = 0;
 
@@ -21,7 +22,7 @@ int previous = 0;
 int current = 0;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.println("============= Receiver ============");
   pinMode(sensor, INPUT);
   pinMode(led, OUTPUT);
@@ -61,13 +62,25 @@ char receiveChar() {
   while (bitcount < 8) {
     if (rx){
       rx = false;
-      current = digitalRead(sensor);
+      current = getSensor();
       bitWrite(c, bitcount, current);
       digitalWrite(led, current);
       bitcount++;
     }
   }
   return c;
+}
+
+int getSensor() {
+  int samples = 16;
+  int reading = 0;
+  for (int i = 0; i < samples; i++) {
+    reading = reading + digitalRead(sensor);
+  }
+  if (reading >= samples/2)
+    return 1;
+  else
+    return 0;
 }
 
 
