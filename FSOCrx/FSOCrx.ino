@@ -14,12 +14,12 @@
 volatile boolean rx = false;
 Timer t = Timer(1, clock, 1);
 byte frameByte = B01010101;
-long skip = 0;
 
-long i = 0;
 
-int previous = 0;
-int current = 0;
+// speed test
+long time = 0;
+long count = 100000;
+long counter = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -34,22 +34,7 @@ void setup() {
 
 void loop() {
   char c = receiveChar();
-
-  #ifdef DEBUG
-  for (int i=7; i>=0; i--){
-    Serial.print(bitRead(c,i));
-  }
-  Serial.print("-->[");
-  #endif
-
-  Serial.write(c);
-
-  #ifdef DEBUG
-  Serial.print("]");
-  if (c == frameByte) {Serial.print(" ----> Frame Byte"); }
-  Serial.println();
-  #endif
-
+  // Serial.write(c);
   if (c == B00000000) {
     sync();
   }
@@ -58,13 +43,18 @@ void loop() {
 
 char receiveChar() {
   int bitcount = 0;
+  int value = 0;
   char c;
   while (bitcount < 8) {
     if (rx){
-      rx = false;
-      current = getSensor();
-      bitWrite(c, bitcount, current);
-      digitalWrite(led, current);
+      //rx = false;
+      if (counter++ > count ){
+        counter = 0;
+        interval(time, count);
+      }
+      value = getSensor();
+      bitWrite(c, bitcount, value);
+      digitalWrite(led, value);
       bitcount++;
     }
   }
@@ -85,23 +75,18 @@ int getSensor() {
 
 
 void sync() {
-  #ifdef DEBUG
-  Serial.println("----- syncing ------");
-  #endif
-
-  Serial.println();
-  while (!digitalRead(sensor)) {
-    ; // do nothing
-  }
-  t.resetClock();
-  rx=false;
-
-  #ifdef DEBUG
-  Serial.println("clock started");
-  #endif
+  // do nothing
 }
 
 
 void clock(int x) {
   rx = true;
+}
+
+
+
+void interval(long & time, long i){
+  long t = micros() - time;
+  time = micros();
+  Serial.print("\t");  Serial.print(t/i);  Serial.println(" microseconds ");
 }

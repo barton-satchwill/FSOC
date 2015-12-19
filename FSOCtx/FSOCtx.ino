@@ -5,7 +5,7 @@
 //         \---------[led]------o 12
 //----------------------------------------------------
 
-// #define DEBUG
+//#define DEBUG
 
 #define led 12
 #define laser 13
@@ -13,33 +13,34 @@
 volatile boolean tx = false;
 Timer t = Timer(1, clock, 1);
 byte frameByte = B01010101;
-int skip = 0;
+
+//speed tests
+long time = 0;
+long count = 100000;
+long counter = 0;
 
 
 void setup() {
-  #ifdef DEBUG
-  for (int i = 3; i<14; i++){
-    pinMode(i, OUTPUT);
-    digitalWrite(i,LOW);
-  }
-  pinMode(led, OUTPUT);
-  digitalWrite(led, LOW);
   Serial.begin(115200);
   Serial.println("=========== Transmitter ===========");
-  #endif
 
   pinMode(laser, OUTPUT);
   digitalWrite(laser, LOW);
   delay(5000);
   t.startClock();
   sync();
+  time = 0;
 }
 
 
 void loop() {
-  // for(char c=33; c<127; c++) {
-  for(char c=65; c<91; c++) {
+  for(char c=65; c<115; c++) {
     sendChar(c);
+
+    if (counter++ > count){
+      counter = 0;
+      interval(time, count);
+    }
   }
   sync();
 }
@@ -49,37 +50,15 @@ void sendChar(char c){
   int bitcount = 0;
   while (bitcount < 8){
     if (tx) {
-      tx=false;
+      //tx=false;
       digitalWrite(laser, bitRead(c,bitcount));
-
-      #ifdef DEBUG
-      Serial.print(bitRead(c,bitcount));
-      digitalWrite(led, bitRead(c,bitcount));
-      digitalWrite(3, digitalRead(3)^1);
-      if (bitcount == 8) {
-        Serial.print("-->[");
-        Serial.write(c);
-        Serial.print("]");
-        Serial.print(" : ");
-        Serial.print(skip);
-        Serial.println();
-      }
-      skip = 0;
-      #endif
-
       bitcount++;
     }
-    else
-      skip++;
   }
 }
 
 
 void sync(){
-  #ifdef DEBUG
-  Serial.println("----- syncing ------");
-  #endif
-
   sendChar(B00000000);
   sendChar(B10000000);
   sendChar(frameByte);
@@ -87,4 +66,11 @@ void sync(){
 
 void clock(int x){
   tx = true;
+}
+
+
+void interval(long & time, long i){
+  long t = micros() - time;
+  time = micros();
+  Serial.print("\t");  Serial.print(t/i);  Serial.println(" microseconds ");
 }
