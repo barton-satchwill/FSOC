@@ -12,7 +12,7 @@
 #define sensor A0
 
 volatile boolean rx = false;
-Timer t = Timer(1, clock, 1);
+Timer t = Timer(1, clock);
 byte frameByte = B01010101;
 
 
@@ -62,7 +62,7 @@ char receiveChar() {
 }
 
 int getSensor() {
-  int samples = 16;
+  int samples = 8;
   int reading = 0;
   for (int i = 0; i < samples; i++) {
     reading = reading + digitalRead(sensor);

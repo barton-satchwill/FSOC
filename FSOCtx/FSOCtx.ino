@@ -11,12 +11,12 @@
 #define laser 13
 
 volatile boolean tx = false;
-Timer t = Timer(1, clock, 1);
+Timer t = Timer(1, clock);
 byte frameByte = B01010101;
 
 //speed tests
 long time = 0;
-long count = 100000;
+long count = 10000;
 long counter = 0;
 
 
@@ -36,11 +36,7 @@ void setup() {
 void loop() {
   for(char c=65; c<115; c++) {
     sendChar(c);
-
-    if (counter++ > count){
-      counter = 0;
-      interval(time, count);
-    }
+      interval(time, counter, count, "1 character: ");
   }
   sync();
 }
@@ -50,7 +46,7 @@ void sendChar(char c){
   int bitcount = 0;
   while (bitcount < 8){
     if (tx) {
-      //tx=false;
+      tx=false;
       digitalWrite(laser, bitRead(c,bitcount));
       bitcount++;
     }
@@ -64,13 +60,20 @@ void sync(){
   sendChar(frameByte);
 }
 
-void clock(int x){
+void clock(){
   tx = true;
 }
 
 
-void interval(long & time, long i){
-  long t = micros() - time;
-  time = micros();
-  Serial.print("\t");  Serial.print(t/i);  Serial.println(" microseconds ");
+void interval(long & t, long & counter, long limit, char * msg){
+  if (counter++ > limit){
+    long interval = micros() - t;
+    t = micros();
+    counter = 0;
+
+    Serial.print(msg);
+    Serial.print("\t");
+    Serial.print(interval/limit);
+    Serial.println(" microseconds ");
+  }
 }
