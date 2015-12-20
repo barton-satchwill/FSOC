@@ -11,10 +11,9 @@
 class Timer
 {
   public:
-    // static int *pin;
     static int pin;
 
-    Timer(double frequency, void (*interruptHandler)(int), int handlerData );
+    Timer(double frequency, void (*interruptHandler)() );
     void startClock();
     void stopClock();
     void toSerial();
@@ -25,7 +24,5 @@ class Timer
     long clockSpeed = 16000000;
     long prescaler; // 1, 8, 32*, 64, 128*, 256, 1024 (* 16-bit clocks, only)
     long compareMatchRegister;
-
-    void doSomethingSecret(void);
 };
 #endif
