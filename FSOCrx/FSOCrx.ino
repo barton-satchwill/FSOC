@@ -18,8 +18,12 @@ byte frameByte = B01010101;
 
 // speed test
 long time = 0;
-long count = 100000;
+long count = 100;
 long counter = 0;
+int expected = 0;
+long success = 0;
+long failure = 0;
+long total = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -34,40 +38,43 @@ void setup() {
 
 void loop() {
   char c = receiveChar();
-  // Serial.write(c);
-  if (c == B00000000) {
-    sync();
-  }
 }
 
 
 char receiveChar() {
-  int bitcount = 0;
-  int value = 0;
+  int actual = 0;
   char c;
-  while (bitcount < 8) {
-    if (rx){
-      //rx = false;
-      if (counter++ > count ){
+  while (true) {
+    if (rx) {
+      rx = false;
+      actual = getSensor(); //digitalRead(sensor);
+      // Serial.print("expected "); Serial.print(expected); Serial.print(", saw "); Serial.print(actual);
+      // Serial.println();
+      if (actual == expected) {success++; }
+
+      expected = expected ^ 1; 
+      total++;
+      counter++;
+
+      if (counter == count ) {
         counter = 0;
-        interval(time, count);
+        Serial.print(((float)success / (float)total) * 100); Serial.println("%");
+        success = 0;
+        failure = 0;
+        total = 0;
       }
-      value = getSensor();
-      bitWrite(c, bitcount, value);
-      digitalWrite(led, value);
-      bitcount++;
     }
   }
   return c;
 }
 
 int getSensor() {
-  int samples = 8;
+  int samples = 2;
   int reading = 0;
   for (int i = 0; i < samples; i++) {
     reading = reading + digitalRead(sensor);
   }
-  if (reading >= samples/2)
+  if (reading >= samples / 2)
     return 1;
   else
     return 0;
@@ -75,18 +82,26 @@ int getSensor() {
 
 
 void sync() {
-  // do nothing
+  Serial.println();
+  while (!digitalRead(sensor)) {
+    ; // do nothing
+  }
+  t.resetClock();
+  rx = false;
+  expected = 0;
+
+  Serial.println("clock started");
 }
 
 
-void clock(int x) {
+void clock() {
   rx = true;
 }
 
 
 
-void interval(long & time, long i){
+void interval(long & time, long i) {
   long t = micros() - time;
   time = micros();
-  Serial.print("\t");  Serial.print(t/i);  Serial.println(" microseconds ");
+  Serial.print("\t");  Serial.print(t / i);  Serial.println(" microseconds ");
 }

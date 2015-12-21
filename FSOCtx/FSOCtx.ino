@@ -16,7 +16,7 @@ byte frameByte = B01010101;
 
 //speed tests
 long time = 0;
-long count = 10000;
+long count = 1000000;
 long counter = 0;
 
 
@@ -36,19 +36,15 @@ void setup() {
 void loop() {
   for(char c=65; c<115; c++) {
     sendChar(c);
-      interval(time, counter, count, "1 character: ");
   }
-  sync();
 }
 
 
-void sendChar(char c){
-  int bitcount = 0;
-  while (bitcount < 8){
+void sendChar(char c) {
+  while (true) {
     if (tx) {
       tx=false;
-      digitalWrite(laser, bitRead(c,bitcount));
-      bitcount++;
+      digitalWrite(laser, digitalRead(laser)^1);
     }
   }
 }
