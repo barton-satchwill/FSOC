@@ -11,7 +11,7 @@
 #define laser 13
 
 volatile boolean tx = false;
-Timer t = Timer(1, clock, 1);
+Timer t = Timer(1, clock);
 byte frameByte = B01010101;
 int skip = 0;
 
@@ -85,6 +85,6 @@ void sync(){
   sendChar(frameByte);
 }
 
-void clock(int x){
+void clock(){
   tx = true;
 }

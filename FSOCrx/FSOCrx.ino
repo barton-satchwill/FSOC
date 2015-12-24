@@ -12,7 +12,7 @@
 #define sensor A0
 
 volatile boolean rx = false;
-Timer t = Timer(1, clock, 1);
+Timer t = Timer(1, clock);
 byte frameByte = B01010101;
 long skip = 0;
 
@@ -102,6 +102,6 @@ void sync() {
 }
 
 
-void clock(int x) {
+void clock() {
   rx = true;
 }
