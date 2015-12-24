@@ -10,6 +10,7 @@
 
 #define led 13
 #define sensor A0
+#define samples 4
 
 volatile boolean rx = false;
 Timer t = Timer(1, clock);
@@ -17,13 +18,9 @@ byte frameByte = B01010101;
 
 
 // speed test
-long time = 0;
-long count = 100;
 long counter = 0;
 int expected = 0;
 long success = 0;
-long failure = 0;
-long total = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -37,7 +34,7 @@ void setup() {
 
 
 void loop() {
-  char c = receiveChar();
+  receiveChar();
 }
 
 
@@ -48,20 +45,15 @@ char receiveChar() {
     if (rx) {
       rx = false;
       actual = getSensor(); //digitalRead(sensor);
-      // Serial.print("expected "); Serial.print(expected); Serial.print(", saw "); Serial.print(actual);
-      // Serial.println();
-      if (actual == expected) {success++; }
-
-      expected = expected ^ 1; 
-      total++;
       counter++;
 
-      if (counter == count ) {
-        counter = 0;
-        Serial.print(((float)success / (float)total) * 100); Serial.println("%");
-        success = 0;
-        failure = 0;
-        total = 0;
+      if (actual == expected) { 
+        success++;    
+        expected = expected ^ 1;
+      } else {
+        Serial.println(counter);
+        counter = 0;        
+        sync();
       }
     }
   }
@@ -69,7 +61,6 @@ char receiveChar() {
 }
 
 int getSensor() {
-  int samples = 2;
   int reading = 0;
   for (int i = 0; i < samples; i++) {
     reading = reading + digitalRead(sensor);
@@ -82,15 +73,15 @@ int getSensor() {
 
 
 void sync() {
-  Serial.println();
+  // Serial.println();
   while (!digitalRead(sensor)) {
-    ; // do nothing
+    ; // do nothing, as quickly as possible
   }
   t.resetClock();
   rx = false;
+  // we just received a '1', 
+  // so we expect the next cycle to transmit a '0'
   expected = 0;
-
-  Serial.println("clock started");
 }
 
 
