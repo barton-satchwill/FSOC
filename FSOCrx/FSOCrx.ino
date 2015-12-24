@@ -72,7 +72,7 @@ char receiveChar() {
 }
 
 int getSensor() {
-  int samples = 16;
+  int samples = 4;
   int reading = 0;
   for (int i = 0; i < samples; i++) {
     reading = reading + digitalRead(sensor);

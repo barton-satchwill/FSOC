@@ -21,8 +21,8 @@ void Timer::startClock() {
   TIMSK1 = B00000010;  // enable timer compare interrupt
   TCNT1 = 0;           // initialise counter
 
-  prescaler = 256;
-  OCR1A = 62499; // 1 Hz
+  // prescaler = 256;
+  // OCR1A = 62499; // 1 Hz
 
   // prescaler = 64;
   // OCR1A = 24999; // 10 Hz
@@ -32,8 +32,8 @@ void Timer::startClock() {
   // OCR1A = 24; // 10,000 Hz
   
 
-  // prescaler = 1;
-  // OCR1A = 1066; // 15,000 Hz
+  prescaler = 1;
+  OCR1A = 1066; // 15,000 Hz
   // OCR1A = 799; // 20,000 Hz
   // OCR1A = 639; // 25,000 Hz
   // OCR1A = 532; // 30,000 Hz
