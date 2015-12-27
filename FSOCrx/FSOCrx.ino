@@ -11,7 +11,7 @@
 #define led 13
 #define sensor A0
 const char frameStart = B00111100;
-const char frameEnd = B00111110;
+const char frameEnd   = B00111110;
 // const char frameStart = B10101010;
 // const char frameEnd = B10000000;
 volatile boolean rx = false;
@@ -32,7 +32,8 @@ void setup() {
 
 void loop() {
   char c = receiveChar();
-  if (c != frameStart && c != frameEnd) {
+
+  if (c != frameStart && c != frameEnd && c != B00000000) {
     #ifdef DEBUG
     for (int i=7; i>=0; i--){
       Serial.print(bitRead(c,i));
@@ -88,7 +89,6 @@ void sync() {
   Serial.println("----- syncing ------");
   #endif
 
-  Serial.println();
   while (!digitalRead(sensor)) {
     ; // do nothing
   }
