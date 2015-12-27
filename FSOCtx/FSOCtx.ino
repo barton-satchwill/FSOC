@@ -5,17 +5,42 @@
 //         \---------[led]------o 12
 //----------------------------------------------------
 
-#define DEBUG
+// #define DEBUG
 
 #define led 12
 #define laser 13
-#define lenPayload 5
+#define lenPayload 30
 const char frameStart = B00111100;
 const char frameEnd = B00111110;
 // const char frameStart = B10101010;
 // const char frameEnd = B10000000;
 volatile boolean tx = false;
 Timer t = Timer(1, clock);
+
+
+char testMsg[] =
+"Ham: I am myself indifferent honest, but yet I could accuse\n\
+  me of such things that it were better my mother had not borne me.\n\
+  I am very proud, revengeful, ambitious; with more offences at my\n\
+  beck than I have thoughts to put them in, imagination to give\n\
+  them shape, or time to act them in. What should such fellows as I\n\
+  do, crawling between earth and heaven? We are arrant knaves all;\n\
+  believe none of us. Go thy ways to a nunnery. Where's your\n\
+  father?\n\
+Oph: At home, my lord.\n\
+Ham: Let the doors be shut upon him, that he may play the fool\n\
+  nowhere but in's own house. Farewell.\n\
+Oph: O, help him, you sweet heavens!\n\
+Ham: If thou dost marry, I'll give thee this plague for thy dowry:\n\
+  be thou as chaste as ice, as pure as snow, thou shalt not escape\n\
+  calumny. Get thee to a nunnery. Go, farewell. Or if thou wilt\n\
+  needs marry, marry a fool; for wise men know well enough what\n\
+  monsters you make of them. To a nunnery, go; and quickly too.\n\
+  Farewell.\n\
+Oph: O heavenly powers, restore him!\n\
+-----------------------\n\n";//\
+
+
 
 
 void setup() {
@@ -39,9 +64,39 @@ void setup() {
 
 
 void loop() {
-  char msg[] = "What hath God wrought?";
-  int len = strlen(msg);
-  enframe(msg);
+  char * message = getInput();
+  send(message);
+}
+
+char * getInput() {
+  return testMsg;
+}
+
+void send(char * message) {
+  enframe(message);
+}
+
+
+void enframe(char *input){
+  size_t offset=0;
+  size_t lenInput = strlen(input);
+  // 3 extra characters for framing and end of string delimiter
+  char txbuffer[lenPayload+3];
+
+  while (offset < lenInput) {
+    txbuffer[0] = frameStart;
+    strncpy(txbuffer+1, input+offset, lenPayload);
+    int end = min(lenPayload+1, strlen(txbuffer));
+    txbuffer[end] = frameEnd;
+    txbuffer[end + 1] = '\0';
+    offset = offset + lenPayload;
+
+    sync();
+    for (int j = 0 ; j<lenPayload+2; j++){
+      sendChar(txbuffer[j]);
+    }
+
+  }
 }
 
 
@@ -64,27 +119,6 @@ void sendChar(char c){
       #endif
       bitcount++;
     }
-  }
-}
-
-
-void enframe(char *input){
-  int offset=0;
-  int lenInput = strlen(input);
-  // 3 extra characters for framing and end of string delimiter
-  char txbuffer[lenPayload+3];
-
-  while (offset < lenInput){
-    txbuffer[0] = frameStart;
-    strncpy(txbuffer+1, input+offset, lenPayload);
-    int end = min(lenPayload+1, strlen(txbuffer));
-    txbuffer[end] = frameEnd;
-    txbuffer[end + 1] = '\0';
-    offset = offset + lenPayload;
-    for (int j = 0 ; j<lenPayload+2; j++){
-      sendChar(txbuffer[j]);
-    }
-    sync();
   }
 }
 
