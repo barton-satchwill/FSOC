@@ -5,15 +5,17 @@
 //         \---------[led]------o 12
 //----------------------------------------------------
 
-// #define DEBUG
+#define DEBUG
 
 #define led 12
 #define laser 13
-
+#define lenPayload 5
+const char frameStart = B00111100;
+const char frameEnd = B00111110;
+// const char frameStart = B10101010;
+// const char frameEnd = B10000000;
 volatile boolean tx = false;
 Timer t = Timer(1, clock);
-byte frameByte = B01010101;
-int skip = 0;
 
 
 void setup() {
@@ -37,11 +39,9 @@ void setup() {
 
 
 void loop() {
-  // for(char c=33; c<127; c++) {
-  for(char c=65; c<91; c++) {
-    sendChar(c);
-  }
-  sync();
+  char msg[] = "What hath God wrought?";
+  int len = strlen(msg);
+  enframe(msg);
 }
 
 
@@ -56,21 +56,35 @@ void sendChar(char c){
       Serial.print(bitRead(c,bitcount));
       digitalWrite(led, bitRead(c,bitcount));
       digitalWrite(3, digitalRead(3)^1);
-      if (bitcount == 8) {
-        Serial.print("-->[");
-        Serial.write(c);
-        Serial.print("]");
-        Serial.print(" : ");
-        Serial.print(skip);
-        Serial.println();
+      if (bitcount == 7) {
+        char str[20];
+        sprintf(str, "-->[%c]\n", c);
+        Serial.print(str);
       }
-      skip = 0;
       #endif
-
       bitcount++;
     }
-    else
-      skip++;
+  }
+}
+
+
+void enframe(char *input){
+  int offset=0;
+  int lenInput = strlen(input);
+  // 3 extra characters for framing and end of string delimiter
+  char txbuffer[lenPayload+3];
+
+  while (offset < lenInput){
+    txbuffer[0] = frameStart;
+    strncpy(txbuffer+1, input+offset, lenPayload);
+    int end = min(lenPayload+1, strlen(txbuffer));
+    txbuffer[end] = frameEnd;
+    txbuffer[end + 1] = '\0';
+    offset = offset + lenPayload;
+    for (int j = 0 ; j<lenPayload+2; j++){
+      sendChar(txbuffer[j]);
+    }
+    sync();
   }
 }
 
@@ -82,7 +96,6 @@ void sync(){
 
   sendChar(B00000000);
   sendChar(B10000000);
-  sendChar(frameByte);
 }
 
 void clock(){

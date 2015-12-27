@@ -24,16 +24,17 @@ void Timer::startClock() {
   // prescaler = 256;
   // OCR1A = 62499; // 1 Hz
 
-  // prescaler = 64;
-  // OCR1A = 24999; // 10 Hz
-  // OCR1A = 2499; // 100 Hz
+  prescaler = 64;
+  OCR1A = 24999; // 10 Hz
+  OCR1A = 2499; // 100 Hz
   // OCR1A = 249; // 1,000 Hz
   // OCR1A = 49; // 5,000 Hz
   // OCR1A = 24; // 10,000 Hz
   
 
-  prescaler = 1;
-  OCR1A = 1066; // 15,000 Hz
+  // prescaler = 1;
+  // OCR1A = 1066; // 15,000 Hz
+  
   // OCR1A = 799; // 20,000 Hz
   // OCR1A = 639; // 25,000 Hz
   // OCR1A = 532; // 30,000 Hz
