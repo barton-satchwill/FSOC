@@ -6,7 +6,7 @@
 
 int pin = 13;
 volatile boolean tic = false;
-Timer myTimer = Timer(0.25, clock);
+Timer myTimer = Timer(1, clock);
 
 void setup() { 
   Serial.begin(9600); 

@@ -11,7 +11,7 @@
 #define laser 13
 
 volatile boolean tx = false;
-Timer t = Timer(1, clock);
+Timer t = Timer(15000, clock);
 byte frameByte = B01010101;
 int skip = 0;
 

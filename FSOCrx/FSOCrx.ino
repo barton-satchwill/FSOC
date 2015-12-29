@@ -12,7 +12,7 @@
 #define sensor A0
 
 volatile boolean rx = false;
-Timer t = Timer(1, clock);
+Timer t = Timer(15000, clock);
 byte frameByte = B01010101;
 long skip = 0;
 
