@@ -10,16 +10,14 @@
 
 #define led 13
 #define sensor A0
-
+const char frameStart = B00111100;
+const char frameEnd   = B00111110;
+// const char frameStart = B10101010;
+// const char frameEnd = B10000000;
 volatile boolean rx = false;
 Timer t = Timer(15000, clock);
-byte frameByte = B01010101;
-long skip = 0;
-
-long i = 0;
-
-int previous = 0;
 int current = 0;
+
 
 void setup() {
   Serial.begin(115200);
@@ -35,20 +33,21 @@ void setup() {
 void loop() {
   char c = receiveChar();
 
-  #ifdef DEBUG
-  for (int i=7; i>=0; i--){
-    Serial.print(bitRead(c,i));
+  if (c != frameStart && c != frameEnd && c != B00000000) {
+    #ifdef DEBUG
+    for (int i=7; i>=0; i--){
+      Serial.print(bitRead(c,i));
+    }
+    Serial.print("-->[");
+    #endif
+
+    Serial.write(c);
+
+    #ifdef DEBUG
+    Serial.print("]");
+    Serial.println();
+    #endif
   }
-  Serial.print("-->[");
-  #endif
-
-  Serial.write(c);
-
-  #ifdef DEBUG
-  Serial.print("]");
-  if (c == frameByte) {Serial.print(" ----> Frame Byte"); }
-  Serial.println();
-  #endif
 
   if (c == B00000000) {
     sync();
@@ -71,6 +70,7 @@ char receiveChar() {
   return c;
 }
 
+
 int getSensor() {
   int samples = 4;
   int reading = 0;
@@ -89,7 +89,6 @@ void sync() {
   Serial.println("----- syncing ------");
   #endif
 
-  Serial.println();
   while (!digitalRead(sensor)) {
     ; // do nothing
   }
