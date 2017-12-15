@@ -11,12 +11,12 @@ In a sense, all that NASA did was to deploy a fibre optic network between the Ea
 
 If NASA can do it, why can't I?
 
-##The Hardware
+## The Hardware
 I used two Arduino Uno's for this project, with very simple circuits to drive a [36¢ laser][laser] as the transmitter and the phototransistor as a receiver.  For most of the development and testing, a bright LED replaced the laser, and allowed the two development boards to be conveniently placed within a few inches of each other.
 
 ![alt text][hardware]
 
-##The Software
+## The Software
 The software implements --in a *very* rudimentary and incomplete way-- layers 1, 2 and 4 of the OSI network communications protocol stack.  Let's face it: there's no need for layer 3, there are only two nodes in our setup.  The code is small and fast, not much more that 4 kilobytes.  Both the receiving and transmitting rates are governed by the 16-bit Arduino timer1, with a single bit being transmitted each timer cycle.  As it didn't make any sense to drive the timer faster than the rest of the system could send and receive a signal, I instrumented the code to measure how long it took to send or receive a single bit.  
 
 | limiting factor               | Time per Bit | Bits per Second  |
@@ -30,16 +30,16 @@ The software implements --in a *very* rudimentary and incomplete way-- layers 1,
 The phototransistor and laser introduce a *lot* of uncertainty.  The table reports typical response time I gleaned from a bit of reading.  I tried to nail down exactly what the response time of *my* phototransistor was, but was never able to achieve convincing results.  Phototransistors are sensitive to saturation, and a pulse of light that is too bright can actually lengthen the response time.  Test results varied enormously depending on the position and intensity of the laser.
 
 
-##Stability
+## Stability
 Early iterations of the code were not stable, and suffered from bit slip as the clocks on the transmitter and receiver drifted apart.  This was addressed by periodically re-synchronising the receiver, and by taking multiple samples from the phototransistor each cycle.  Thus, the actual time to read a single bit is better expressed as 13.5+(4.5*n*) μsec for *n* samples.
 
 Timer frequency, number of samples per bit, and re-synchronisation period became tuning parameters for the system.  
 
-##Results
+## Results
 Ultimately, I was able to achieve a remarkably stable system transmitting data at a whopping 15 kilobits per second, beating the [14,400][14400] modems of the mid 90's .
 
-##Next Steps
-The next obvious evolution for this project is to use orbiting mirrors to send a signal from the Earth to my base on the far side of the Moon.
+## Next Steps
+The next obvious evolution for this project is to use orbiting mirrors to send a signal from the Earth to my secret base on the far side of the Moon.
 
 
 [FSOC]: https://en.wikipedia.org/wiki/Free-space_optical_communication
